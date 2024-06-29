@@ -1,11 +1,11 @@
 from io import BytesIO
 from captcha.image import ImageCaptcha
+from package import CAPTCHA_IMAGE_HEIGHT_DEFAULT,\
+                    CAPTCHA_IMAGE_WIDTH_DEFAULT
 
-# Captcha image sizing
-CAPTCHA_IMAGE_WIDTH: int = 280
-CAPTCHA_IMAGE_HEIGHT: int = 100
-
-def generate_captcha(text: str, width: int =CAPTCHA_IMAGE_WIDTH, height: int =CAPTCHA_IMAGE_HEIGHT):
+def generate_captcha(text: str,
+                     width: int =CAPTCHA_IMAGE_WIDTH_DEFAULT,
+                     height: int =CAPTCHA_IMAGE_HEIGHT_DEFAULT):
 
     # Configure
     image = ImageCaptcha(width, height)

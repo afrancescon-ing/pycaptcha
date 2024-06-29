@@ -2,10 +2,11 @@ import uuid
 import logging
 from fastapi import FastAPI
 from fastapi.responses import Response, JSONResponse
+from package import CAPTCHA_UUID_KEY
 from package.persistency.prims import pm_factory
 from package.utils.captcha import generate_captcha
 from package.utils.log_manager import configure_log
-from package.utils.params_manager import CAPTCHA_UUID_KEY
+from package.utils.params_manager import get_captcha_width, get_captcha_height
 from package.utils.textgen import generate_random_captcha_text
 
 # Logger configuration
@@ -17,19 +18,23 @@ logger = logging.getLogger(__name__)
 # Persistence manager configuration
 
 persistence_manager = pm_factory()
+captcha_width = get_captcha_width()
+captcha_height = get_captcha_height()
 
 # Instantiate app
 
 app = FastAPI()
 
 @app.get("/")
-async def get_captcha() -> Response:
+async def generate() -> Response:
 
     if persistence_manager is None:
         raise TypeError("Persistence Manager is not assigned")
 
     captcha_text = generate_random_captcha_text()
-    image_bytes = generate_captcha(captcha_text)
+    image_bytes = generate_captcha(captcha_text,
+                                   captcha_width,
+                                   captcha_height)
 
     headers: dict = {}
     while not headers:

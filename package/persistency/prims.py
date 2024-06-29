@@ -3,14 +3,11 @@ import os
 from typing import Optional, Union
 from package.persistency.managers.cache_local_pm import LocalCachePersistenceManager
 from package.persistency.managers.redis_pm import RedisPersistenceManager
-from package.utils.params_manager import PM_TYPE_CACHE, PM_TYPE_REDIS, get_pm_class, get_pm_params
-
-PYCAP_REDIS_HOST = 'PYCAP_REDIS_HOST'
-PYCAP_REDIS_PORT = 'PYCAP_REDIS_PORT'
-PYCAP_REDIS_DECODE_RESPONSE = 'PYCAP_REDIS_DECODE_RESPONSE'
-PYCAP_REDIS_EXPIRE_TIME_S = 'PYCAP_REDIS_EXPIRE_TIME_S'
-
-
+from package.utils.params_manager import \
+    PM_CACHE_TYPE,\
+    PM_REDIS_TYPE,\
+    get_pm_class,\
+    get_pm_params
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +22,9 @@ def get_parameter(param: str, param_dict: Optional[dict] =None, param_env_name: 
 def pm_factory_none_allowed(pmanager_type: str, params: Optional[dict] =None) -> Union[LocalCachePersistenceManager, RedisPersistenceManager, None]:
     if params is None:
         params = {}
-    if pmanager_type == PM_TYPE_CACHE:
+    if pmanager_type == PM_CACHE_TYPE:
         return LocalCachePersistenceManager(**params)
-    elif pmanager_type == PM_TYPE_REDIS:
+    elif pmanager_type == PM_REDIS_TYPE:
         return RedisPersistenceManager(**params)
     
     return None

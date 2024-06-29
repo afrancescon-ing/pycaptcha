@@ -23,22 +23,27 @@ You have two weeks starting from today to deliver your assignment. When you’re
 
 ### Used libs
 ```
-pip install fastapi uvicorn mypy captcha redis
+pip install fastapi uvicorn mypy captcha redis httpx pytest
 ```
 * [FastAPI](https://fastapi.tiangolo.com/)
 * [uvicorn](https://www.uvicorn.org/)
 * [mypy](https://pypi.org/project/mypy/)
 * [captcha](https://pypi.org/project/captcha/)
 * [redis](https://github.com/redis/redis-py)
+* [httpx](https://www.python-httpx.org/)
+* [pytest](https://docs.pytest.org/en/8.2.x/)
+
 
 ### Folder Structure
 
-Note: `__init__.py` omitted
+Note: empty `__init__.py` omitted
 ```
 log/                            log folder
 package/                        source code for modules developed for the app
+    __init__.py                 app constants
     persistency/                folder for persistency related components
         managers/               definitions of persistency managers (pm)
+            __init__.py         Persistency Managers specific constants
             cache_local_pm.py   in-memory, dict-based pm class
             pm_interface.py     interface for pms
             redis_pm.py         redis-based pm class
