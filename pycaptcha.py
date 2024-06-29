@@ -1,71 +1,51 @@
 import uuid
-from io import BytesIO
-from random import choice
-from string import ascii_uppercase
-from multiprocessing import Lock
+import logging
 from fastapi import FastAPI
 from fastapi.responses import Response, JSONResponse
-from captcha.image import ImageCaptcha
+from package.persistency.prims import pm_factory
+from package.utils.captcha import generate_captcha
+from package.utils.log_manager import configure_log
+from package.utils.params_manager import CAPTCHA_UUID_KEY
+from package.utils.textgen import generate_random_captcha_text
 
+# Logger configuration
+
+configure_log()
+
+logger = logging.getLogger(__name__)
+
+# Persistence manager configuration
+
+persistence_manager = pm_factory()
+
+# Instantiate app
 
 app = FastAPI()
 
-cache = {}
-
-
-# estrapolare cache e fare persistenza per redis (set+ expire + delete)
-CAPTCHA_ALLOWED_CHARS = ascii_uppercase
-CAPTCHA_UUID_KEY = 'captcha-uuid'
-KEY_LIFETIME_SECONDS = 60
-
-lock = Lock()
-
-def push_captcha(captcha_uuid: str, captcha_text: str):
-    lock.acquire()
-    try:
-        if captcha_uuid in cache:
-            return False
-        cache[captcha_uuid] = captcha_text
-        return True
-    finally:
-        lock.release()
-
-def pop_captcha(captcha_uuid: str):
-    lock.acquire()
-    try:
-        return cache.pop(captcha_uuid)
-    except KeyError:
-        return None
-    finally:
-        lock.release()
-
-def generate_captcha_text(length: int): 
-    return ''.join(choice(CAPTCHA_ALLOWED_CHARS) for i in range(length))
-
 @app.get("/")
-async def root():
+async def get_captcha() -> Response:
 
-    # Create an image instance of the given size
-    image = ImageCaptcha(width = 280, height = 100)
+    if persistence_manager is None:
+        raise TypeError("Persistence Manager is not assigned")
 
-    # Image captcha text
-    captcha_text = generate_captcha_text(10)
+    captcha_text = generate_random_captcha_text()
+    image_bytes = generate_captcha(captcha_text)
 
-    headers = {}
-
+    headers: dict = {}
     while not headers:
         captcha_uuid = str(uuid.uuid4())
 
-        if push_captcha(captcha_uuid, captcha_text):
+        if persistence_manager.push(captcha_uuid, captcha_text):
             headers[CAPTCHA_UUID_KEY] = captcha_uuid
-            print(f'127.0.0.1:8000/{captcha_uuid}/{captcha_text}')
 
-    # generate the image of the given text
-    image_bytes: BytesIO= image.generate(captcha_text)
-    
-    return Response(content=image_bytes.getvalue(), media_type="image/png", headers=headers)
+    return Response(
+        content=image_bytes,
+        media_type="image/png",
+        headers=headers)
 
 @app.get("/{captcha_uuid}/{captcha_text}")
-async def ciccio(captcha_uuid: str, captcha_text: str):
-    return JSONResponse(content={"validation": pop_captcha(captcha_uuid) == captcha_text})
-
+async def validate(captcha_uuid: str, captcha_text: str) -> JSONResponse:
+    if persistence_manager is None:
+        raise TypeError("Persistence Manager is not assigned")
+    return JSONResponse(
+        content={"validation": persistence_manager.pop(captcha_uuid) == captcha_text})
