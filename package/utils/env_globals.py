@@ -12,7 +12,7 @@ from package.persistency.managers.redis_pm import RedisPersistenceManager
 
 logger = logging.getLogger(__name__)
 
-persistence_manager: Union[LocalCachePersistenceManager, RedisPersistenceManager]    
+persistence_manager: Union[LocalCachePersistenceManager, RedisPersistenceManager]
 captcha_width: int
 captcha_height: int
 textgen_length: int
