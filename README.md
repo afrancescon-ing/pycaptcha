@@ -94,7 +94,7 @@ A GET request at the plain URL:
 _http://`hostname`:`port`_  
 triggers this function, which generates a random string and creates a unique identifier `uuid` for it.  
 Then, it stores the pair (uuid, text) in the Persistence Manager.  
-Once the pair is stored, the function generates the captcha image and returns it as a response, with the uuid associated with the captcha in the header of the response file (key=`captcha_uuid`).  
+Once the pair is stored, the function generates the captcha image and returns it as a response, with the uuid associated with the captcha **in the header of the response** (key=`captcha_uuid`).  
 
 _**NOTE:**_ 
 To avoid having couples stored in the Persistence Manager for an indeterminate amount of time, it is worth assigning an expiration_time to each added couple: when the timer expires, the couple is deleted from the Persistence Manager. Thus, even if a couple is never checked again, it will be removed after a finite time.
