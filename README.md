@@ -39,7 +39,7 @@ You have two weeks starting from today to deliver your assignment. When you’re
 ### Used libs
 Python version: `Python 3.9.18`
 
-Libraries:
+Installed libraries:
 
 * [FastAPI](https://fastapi.tiangolo.com/)
 * [uvicorn](https://www.uvicorn.org/)
@@ -125,9 +125,50 @@ Our cooking site registration operation can operate as follows:
    * on `false`, it stops the submission process, notifies the user about the failed attempt and proceed with the action planned in case of error (e.g., requesting the user to guess on another captcha)
 
 #### S4. CAPTCHA
+For captcha image generation, I relied on `captcha` library.  
+After a simple initialization, it takes an input string to generate a related captcha.  
+For the text, I added a basic random text generator module (see next [subsection](#s5-text-generator))
+
 #### S5. TEXT Generator
+Text generator generates random text starting from the expected length of the generated text (passed as an integer) and the set of allowed chars (passed as string).
+
 #### S6. PERSISTENCY Managers
+The Persistency Manager (PM) is the component of the system meant to store and preserve (according to some policies) all the information reqired for the correct functioning of the solution.  
+In terms of stored data, the PM saves the association between a generated captcha text and the identifier (uuid) generated when that captcha text is used to generate the captcha image. This is done by defining a `(key, value)` couple, where `key` is the `uuid` and `value` is the `text`.  
+In terms of policies, we would like to have the following behaviors implemented:
+  1. For each new captcha generated, its associated couple (uuid, text) has to be saved immediately into PM.  
+  That couple is said `active`;
+
+  2. Every captcha created, even if created with the same input text, has an identifier different from any of all the other active couples (=captchas);
+
+  3. When a couple (uuid, text) is accessed for validation, it has to be DELETED from the PM.
+  That couple is now said `consumed`;
+
+  4. After passing a given amount of time (i.e., `EXPIRATION_TIME`) since the activation (i.e., insertion into PM) of a couple, if that couple has not been consumed yet , it is considered `expired` and listed as candidate for deletion. It can be deleted immediately (`strict expiration time`) or after some time variable (`loose expiration time`), but the point is not to have it lingerinng in the PM forever.
+
+  5. Each operation on the PM has to be synchronized, to have each operation executed in sequence and avoid any chance of concurrent acces to the resource
+
+Policy 1. ensures the immediate availability of the couple for incoming validation checks.  
+Policy 2. grants no ambiguities and collisions between active captchas. The identifier uniqueness is ensured by using `uuids`.  
+Policy 3. prevents multiple attempts on failed validation.  
+Policy 4. prevents the PM from being saturated by not validated couples.  
+Policy 5. prevents a simultaneous acces to the resource for validation, trying to have it validated by flooding with concurrent requests. The synchronized approach is implemented using `threading.Lock`-based checks on PM operations.
+
 ##### S6.1) Local Cache
+This is an in-memory implementation of PM based on a dictionary.  
+Activation and consuption of the key is trivial, respectively based on insertion and deletion.  
+Since implementing a strict expiration mechanism is somewhat resource consuming (it implies one or more threads in background performing the deletion operation with a timer specific for each couples, leading to a potentially impacting resource consumption and overmanagement), the proposed implementation relies on a `loose expiration approach`, where the activation generates and stores a `3-ple (key, value, activation_time)` and then a `tidy routine` is assumed to be triggered periodically (every `TIDY_TIME` seconds) checking all active entries and deleting those expired. Thus, after `EXPIRATION_TIME+TIDY_TIME` seconds passed since creation it is sure that that PM entry is no more.
 ##### S6.2) Redis
+This implementation is reling on an external Redis running instance (python library `redis` is required to interface with it). Redis instance hostname and port are supposed to be set:
+* by hardcoding default values here  
+@`pycaptcha/package/persistency/managers/__init__.py`
+* indirectly, by defining some specific environmental variables  
+`PYCAP_APP_REDIS_HOST`  
+`PYCAP_APP_REDIS_PORT`  
+before running the app  
+**_NOTE_**: Same dual approach can be applied for other parameters, as explained in [S7](#s7-environmental-variables-management)
+
+Policy 1. is satisfied by leveraging SET method, and, by specifying the `ex` option, at the same time we configure for that inserted couple (uuid, value) an expiration time natively managed by Redis (thus, satisfying also policy 4. with a `strict expiration` approach).  
+Policy 3. is granted by using `getdel` method, which returns the value associated with that key and, at the same time, deletes the entry.
 #### S7. ENVironmental VARiables Management
 #### S8. TESTING
