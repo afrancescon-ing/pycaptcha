@@ -28,7 +28,7 @@ You have two weeks starting from today to deliver your assignment. When you’re
 
 [Sa] FastAPI used
 
-[Sb] See [S8](#s8-testing) section
+[Sb] See [S8](#s9-testing) section
 
 [Sc] All code is typed (mypy is green and also its VSCode plugin does not highlight criticalities)
 
@@ -52,6 +52,12 @@ Installed libraries:
 ```
 pip install fastapi uvicorn mypy captcha redis httpx pytest
 ```
+### Run it
+Be sure to be in main project folder, then run
+```
+uvicorn pycaptcha:app --reload
+```
+API shall be accessed at `127.0.0.1:8000`
 
 ### Folder Structure
 
@@ -154,21 +160,78 @@ Policy 3. prevents multiple attempts on failed validation.
 Policy 4. prevents the PM from being saturated by not validated couples.  
 Policy 5. prevents a simultaneous acces to the resource for validation, trying to have it validated by flooding with concurrent requests. The synchronized approach is implemented using `threading.Lock`-based checks on PM operations.
 
-##### S6.1) Local Cache
+##### S6.1) Local Cache PM
 This is an in-memory implementation of PM based on a dictionary.  
 Activation and consuption of the key is trivial, respectively based on insertion and deletion.  
 Since implementing a strict expiration mechanism is somewhat resource consuming (it implies one or more threads in background performing the deletion operation with a timer specific for each couples, leading to a potentially impacting resource consumption and overmanagement), the proposed implementation relies on a `loose expiration approach`, where the activation generates and stores a `3-ple (key, value, activation_time)` and then a `tidy routine` is assumed to be triggered periodically (every `TIDY_TIME` seconds) checking all active entries and deleting those expired. Thus, after `EXPIRATION_TIME+TIDY_TIME` seconds passed since creation it is sure that that PM entry is no more.
-##### S6.2) Redis
+
+##### S6.2) Redis PM
 This implementation is reling on an external Redis running instance (python library `redis` is required to interface with it). Redis instance hostname and port are supposed to be set:
 * by hardcoding default values here  
-@`pycaptcha/package/persistency/managers/__init__.py`
-* indirectly, by defining some specific environmental variables  
+`pycaptcha/package/persistency/managers/__init__.py`
+* indirectly, by defining these specific environmental variables (with proper values)  
 `PYCAP_APP_REDIS_HOST`  
 `PYCAP_APP_REDIS_PORT`  
 before running the app  
 **_NOTE_**: Same dual approach can be applied for other parameters, as explained in [S7](#s7-environmental-variables-management)
+* by passing (altering the code) the new environmental variables name and values structured as a dictionary `env_vars` to the function  
+`EGLOB.init_environment(env_vars)` in `pycaptcha.py`  
+(again, see [S7](#s7-environmental-variables-management))
 
 Policy 1. is satisfied by leveraging SET method, and, by specifying the `ex` option, at the same time we configure for that inserted couple (uuid, value) an expiration time natively managed by Redis (thus, satisfying also policy 4. with a `strict expiration` approach).  
 Policy 3. is granted by using `getdel` method, which returns the value associated with that key and, at the same time, deletes the entry.
+
 #### S7. ENVironmental VARiables Management
-#### S8. TESTING
+To provide higher flexibility to the code, the application is capable of retrieving the value for its main parameters from environmental variables.  
+These are the currently available parameter covered by such a feature: 
+
+`PYCAP_APP_HOST`: application host  
+`PYCAP_APP_PORT`: application port  
+
+`PYCAP_LOG_LEVEL`: log level  
+`PYCAP_LOG_LOGFOLDER`: log folder  
+
+`PYCAP_TEXTGEN_LENGTH`: length of the randomly generated text for captchas  
+`PYCAP_TEXTGEN_ALLOWED_CHARS`: allowed charset for randomly generated text for captchas  
+
+`PYCAP_CAPTCHA_WIDTH`: captcha image's width  
+`PYCAP_CAPTCHA_HEIGHT`: captcha image's width  
+
+`PYCAP_PM_CLASS`: class of PM to use (`'cache'` or `'redis'`)  
+
+`PYCAP_PM_CACHE_EXPTIME`: expiration time for Local Cache PM  
+`PYCAP_PM_CACHE_TIDYTIME`: tidy time for Local Cache PM  
+ 
+`PYCAP_APP_REDIS_HOST`: Redis instance host  
+`PYCAP_APP_REDIS_PORT`: Redis instance port  
+`PYCAP_PM_REDIS_EXPTIME`: expiration time for Redis PM  
+`PYCAP_PM_REDIS_DECODE_RESP`: decode_response value for Redis PM (should be `True`)
+
+The names and default values for such environemntal variableas are defined here:
+* `pycaptcha/package/__init__.py`
+* `pycaptcha/package/persistency/managers/__init__.py`
+
+and some utility functions for handling them during application execution are defined here:
+* `pycaptcha/package/utils/params_manager.py`
+
+The policy regarding the usage of such parameters is the following:  
+* IF an argument is explicitly passed in a function call, THEN the argument value is used
+* ELSE, IF the associate environmental variable is defined, THEN the value of the env var is used
+* ELSE, the default value is used
+
+_**NOTE**_: such an ENV_VAR-based configuration approach could be also useful when the application is run in a docker image, since environmental variables can be configured in the image configuration, without the need for modifying directly the application code
+
+#### S8. GLOBAL VARIABLES
+Application proper functioning relies on these 5 gobal variables (defined in pycaptcha/package/utils/env_globals.py): 
+
+`persistence_manager`: current instance of PM in use  
+`captcha_width`: current value for captcha image's width (in pixels)  
+`captcha_height`: current value for captcha image's height (in pixels)  
+`textgen_length`: current value for random generated captcha text's length  
+`textgen_allowed_chars`: current value for random generated captcha text's allowed charset  
+
+`init_environment` function (defined in the same file) assigns the value to these variables (and also sets environmental variables, if provided - as anticipated at the end of section [S62](#s62-redis-pm)).
+
+_**NOTE**_: Running this function multiple times overwrites previous values (something that will impact heavily any previous operation on PM, since a new instance of it will be generated and used, with the previous one left away for the garbage collector)
+
+#### S9. TESTING
