@@ -29,3 +29,6 @@ class PersistenceManagerInterface:
             Union (str | None): the removed value
         """
         return None
+    
+    def my_type(self) -> str:
+        return 'interface'

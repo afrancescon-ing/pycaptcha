@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 import redis
 from package.persistency.managers.pm_interface import PersistenceManagerInterface
+from package.persistency.managers import PM_REDIS_TYPE
 from package.utils.params_manager import get_app_host, get_app_port
 
 REDIS_SET_ONLY_IF_NOT_EXISTENT = True
@@ -75,3 +76,6 @@ class RedisPersistenceManager(PersistenceManagerInterface):
 
     def pop(self, uuid: str) -> Optional[str]:
         return self.pop_original(uuid)
+
+    def my_type(self) -> str:
+        return PM_REDIS_TYPE

@@ -3,6 +3,7 @@ from time import time
 from multiprocessing import Lock
 from threading import Timer
 from package.persistency.managers.pm_interface import PersistenceManagerInterface
+from package.persistency.managers import PM_CACHE_TYPE
 from package.utils.params_manager import get_app_host, get_app_port
 
 CACHE_VALUE = 0
@@ -40,6 +41,7 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             if uuid in self._cache:
                 return False
             self._cache[uuid] = [value, time()]
+            # print("Insertion response %s/%s",uuid, value)
             logger.debug(
                 '[CACHE_PM] ADDED new captcha @%s:%i/%s/%s',
                 self.app_host,
@@ -54,12 +56,14 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
         self._lock.acquire()
         try:
             response =  self._cache.pop(uuid)[CACHE_VALUE]
+            # print("DEleteion response %s",response)
             logger.debug(
                 '[CACHE_PM] DELETED captcha @%s:%i/%s/%s',
                 self.app_host,
                 self.app_port,
                 uuid,
                 response)
+            return response
         except KeyError:
             return None
         finally:
@@ -73,7 +77,6 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             anomalies = []
             kept = []
             for key, entry in self._cache.items():
-                # logger.debug('Tidy: [%s] delta = %f (expire=%i)', key, now - entry[CACHE_TIME], self.expire_time_s)
                 if now - entry[CACHE_TIME] >= self.expire_time_s:
                     expired.append(key)
                 else:
@@ -86,18 +89,28 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             return (kept, expired, anomalies)
         finally:
             self._lock.release()
-    
+
     def schedule_tidings(self):
         # self.scheduler.enter(CACHE_TIDY_INTERVAL, 1, tidy_routine, (self,))
         t = Timer(self.tidy_time_s, self.tidy_routine, [])
+        t.daemon = True
         t.start()
-        
+
     def tidy_routine(self):
         self.schedule_tidings()
         self.print_tidy_report(*self.tidy())
-        
+
     def print_tidy_report(self, kept, expired, anomalies):
-        logger.debug('[CACHE_PM] Tidy report: original %i, kept: %i (expired&deleted: %i - deletion anomalies: %i)', len(kept)+len(expired), len(kept), len(expired), len(anomalies))
+        logger.debug('[CACHE_PM] Tidy report: '
+                     'original %i, kept: %i '
+                     '(expired&deleted: %i - deletion anomalies: %i)',
+                     len(kept)+len(expired),
+                     len(kept),
+                     len(expired),
+                     len(anomalies))
+
+    def my_type(self) -> str:
+        return PM_CACHE_TYPE
 
 # def tidy_routine(cache_pm: LocalCachePersistenceManager):
 #     cache_pm.schedule_tidings()
