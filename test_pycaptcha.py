@@ -56,7 +56,7 @@ def validate_req_and_assert(client: TestClient, uuid: str, value: str, expected_
 
 def test_generate_random_captcha_text():
 
-    client = TestClient(app)
+    # client = TestClient(app)
 
     env_vars = {}
     env_vars[TEXTGEN_LENGTH_ENV] = "2"

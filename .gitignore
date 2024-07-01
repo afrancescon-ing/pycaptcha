@@ -1,4 +1,5 @@
 __pycache__
 mypy.ini
 .mypy_cache
-test_*
+.pytest_cache
+log
