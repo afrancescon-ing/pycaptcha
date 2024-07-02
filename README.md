@@ -55,7 +55,7 @@ pip install fastapi uvicorn mypy captcha redis httpx pytest
 ### Run it
 Be sure to be in the main project folder, then run
 ```
-uvicorn pycaptcha:app --reload
+python3 pycaptcha.py
 ```
 API shall be now accessible at `127.0.0.1:8000`
 

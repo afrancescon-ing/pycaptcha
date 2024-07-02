@@ -92,3 +92,9 @@ async def validate(captcha_uuid: str, captcha_text: str) -> JSONResponse:
         raise ValueError("Persistence Manager is not assigned")
     return JSONResponse(
         content={"validation": EGLOB.persistence_manager.pop(captcha_uuid) == captcha_text})
+    
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+    while (True):
+        pass
