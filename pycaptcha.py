@@ -9,10 +9,10 @@ from package.utils.log_manager import configure_log
 from package.utils.textgen import generate_random_captcha_text
 
 configure_log()
-
 logger = logging.getLogger(__name__)
 
-
+# This commented code is left here as an example of the in-code
+# env_vars configuration
 # from package import \
 #     CAPTCHA_UUID_KEY,\
 #     TEXTGEN_ALLOWED_CHARS_ENV,\
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 # env_vars[PM_CLASS_ENV] = PM_CACHE_TYPE
 # env_vars[PM_CACHE_TIDYTIME_ENV] = '2'
 # env_vars[PM_CACHE_EXPTIME_ENV] = '3'
+# EGLOB.init_environment(env_vars)
 
 EGLOB.init_environment()
 
@@ -39,9 +40,18 @@ app = FastAPI()
 
 @app.get("/")
 async def generate() -> Response:
+    """Generate a captcha
+
+    Raises:
+        ValueError: Persistence Manager not defined
+
+    Returns:
+        Response: the generated captcha image (in png format) + the associated 
+                  uuid saved in the response header
+    """
 
     if EGLOB.persistence_manager is None:
-        raise TypeError("Persistence Manager is not assigned")
+        raise ValueError("Persistence Manager is not assigned")
 
     captcha_text = generate_random_captcha_text(
         EGLOB.textgen_length, EGLOB.textgen_allowed_chars)
@@ -64,7 +74,21 @@ async def generate() -> Response:
 
 @app.get("/{captcha_uuid}/{captcha_text}")
 async def validate(captcha_uuid: str, captcha_text: str) -> JSONResponse:
+    """Validate the user guess on captcha image generating tet
+
+    Args:
+        captcha_uuid (str): the identifier of the captcha image
+        captcha_text (str): the user guess about the original text the captcha 
+                            was generated from
+
+    Raises:
+        ValueError: Persistence Manager not defined
+
+    Returns:
+        JSONResponse: JSON structured response on the correctness of the 
+                      user's guess.
+    """
     if EGLOB.persistence_manager is None:
-        raise TypeError("Persistence Manager is not assigned")
+        raise ValueError("Persistence Manager is not assigned")
     return JSONResponse(
         content={"validation": EGLOB.persistence_manager.pop(captcha_uuid) == captcha_text})

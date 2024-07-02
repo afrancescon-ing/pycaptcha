@@ -1,3 +1,6 @@
+""" Utility functions for environmental and global variables
+"""
+
 import logging
 import os
 from typing import Union, Dict
@@ -19,6 +22,14 @@ textgen_length: int
 textgen_allowed_chars: str
 
 def init_environment(env_vars: Union[Dict[str, str], None] =None):
+    """Environmental variable configuration and app initialization
+
+    Args:
+        env_vars (Union[Dict[str, str], None], optional): key-value couples 
+                                                          for env definition. 
+                                                          Defaults to None.
+    """
+
     global persistence_manager 
     global captcha_width
     global captcha_height
@@ -46,5 +57,10 @@ def init_environment(env_vars: Union[Dict[str, str], None] =None):
                 textgen_allowed_chars)
 
 def get_pm_type() -> str:
+    """Get the type of the current value of persistence_manager
+
+    Returns:
+        str: type of the current value of persistence_manager
+    """
     return persistence_manager.my_type()
     

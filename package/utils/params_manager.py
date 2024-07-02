@@ -1,3 +1,6 @@
+""" Utility functions for app parameters management
+"""
+
 import os
 from enum import Enum
 from typing import Union, Optional, Dict
@@ -47,12 +50,22 @@ from package.persistency.managers import \
     PM_REDIS_TYPE 
     
 class ParamType(Enum):
+    """Enum to menage diffrent data types in parameter descriptors
+    """
     INT = 'int',
     FLOAT = 'float'
     STR = 'str',
     BOOL = 'bool',
     NONE = 'None'
-    
+
+#    Parameter descriptors
+#
+#    suffixes meaning:
+#    _key:       key name in dictionaries
+#    _env_name:  environment variable name
+#    default:    default value
+#    _type:      parameter data type
+
 
 # App default host & port
 APP_HOST: dict = {
@@ -153,7 +166,19 @@ PM_REDIS_PARAMS = [
     APP_PM_REDIS_HOST,
     APP_PM_REDIS_PORT]
 
-def typize(value=str, desired_type=str) -> Union[ str, int, float, bool, None]:
+def typize(value: str, desired_type: str) -> Union[ str, int, float, bool, None]:
+    """Cast value to the desired type
+
+    Args:
+        value (str): value.
+        desired_type (str): desired type to cast value to
+
+    Raises:
+        ValueError: Unknown value for desired_type
+
+    Returns:
+        Union ( str | int| float| bool| None): cast value
+    """
     if desired_type == ParamType.STR:
         return str(value)
     if desired_type == ParamType.INT:
@@ -167,12 +192,24 @@ def typize(value=str, desired_type=str) -> Union[ str, int, float, bool, None]:
     raise ValueError(f'invalid desired_type: {desired_type}')
 
 def retrieve_parameter( 
-        param_key: str, 
+        param_key: str,
         param_env_name: Union[str , None] =None,
         default: Union[str, None] =None,
-        param_type: Union[str, ParamType] =ParamType.STR,
-        params_dict: Union[Dict[str, Union[ str, int, float, bool, None]], None] =None) -> \
+        param_type: str = str(ParamType.STR),
+        params_dict: Union[Dict[str, str], None] =None) -> \
         Union[ str, int, float, bool, None]:
+    """ Retrieves parameter value (used in combination with parameter descriptor)
+    
+    Args:
+        param_key (str): parameter key
+        param_env_name (Union[str , None]): parameter environment variable name.
+                                            Default to None.
+        default (Union[str, None]): parameter default value. Default to None.
+        param_type (str): parameter expected type
+        params_dict (Union[Dict[str, str], None]): Dictionary of custom values. Default to None.
+    Returns:
+        Union ( str | int| float| bool| None): parameter value
+    """
     print(param_key, param_env_name, default, params_dict)
     if params_dict and param_key in params_dict:
         return typize(params_dict[param_key], param_type)
@@ -183,29 +220,61 @@ def retrieve_parameter(
         except KeyError:
             pass
 
-    return typize(default, param_type)
+    return typize(str(default), param_type)
 
-def retrieve_multiple_params(Params_desc_list: list) -> dict:
+def retrieve_multiple_params(params_desc_list: list) -> dict:
+    """Aggregate parameter retieval in dictionary
+
+    Args:
+        params_desc_list (list): list of parameter descriptors
+
+    Returns:
+        dict: dictionary parameters values
+    """
     params = {}
-    for param_desc in Params_desc_list:
+    for param_desc in params_desc_list:
         params[param_desc["param_key"]] = retrieve_parameter(**param_desc)
     return params
 
 def get_pm_class() -> str:
+    """Get PM class value
+
+    Raises:
+        TypeError: Persistence Manager class shall be a string (not None)
+
+    Returns:
+        str: class value
+    """
     response = retrieve_parameter(**APP_PM_CLASS)
     if response is None:
         raise TypeError("Persistence Manager class shall be a string (not None)")
     return str(response)
 
 def get_app_host() -> Optional[str]:
+    """Get app host value
+    Returns:
+        Union (str | None): app host value
+    """
     response = retrieve_parameter(**APP_HOST)
     return None if response is None else str(response)
 
 def get_app_port() -> Optional[int]:
+    """Get app port value
+    Returns:
+        Union (int | None): app port value
+    """
     response = retrieve_parameter(**APP_PORT)
     return None if response is None else int(response)
 
 def get_pm_params(pm_class: str) -> dict:
+    """Get parameter dictionary for pm class
+
+    Args:
+        pm_class (str): PM class
+
+    Returns:
+        dict: dictionary of Pm class-specific parameters
+    """
     if pm_class == PM_CACHE_TYPE:
         return retrieve_multiple_params(PM_CACHE_PARAMS)
     if pm_class == PM_REDIS_TYPE:
@@ -213,25 +282,55 @@ def get_pm_params(pm_class: str) -> dict:
     return {}
 
 def get_captcha_width() -> int:
+    """Get captcha image width
+
+    Returns:
+        int: captcha image width
+    """
     response = retrieve_parameter(**CAPTCHA_IMAGE_WIDTH)
     return CAPTCHA_IMAGE_WIDTH_DEFAULT if response is None else int(response)
 
 def get_captcha_height() -> int:
+    """Get captcha image height
+
+    Returns:
+        int: captcha image height
+    """
     response = retrieve_parameter(**CAPTCHA_IMAGE_HEIGHT)
     return CAPTCHA_IMAGE_HEIGHT_DEFAULT if response is None else int(response)
 
 def get_textgen_allowed_chars() -> str:
+    """Get textgen allowed charset
+
+    Returns:
+        str: charset
+    """
     response = retrieve_parameter(**TEXTGEN_ALLOWED_CHARS)
     return '' if response is None else str(response)
 
 def get_textgen_length() -> int:
+    """Get textgen length for generated text
+
+    Returns:
+        int: length of generated text
+    """
     response = retrieve_parameter(**TEXTGEN_LENGTH)
     return 0 if response is None else int(response)
 
 def get_cache_tidytime() -> int:
+    """Get tidy time for Cache PM
+
+    Returns:
+        int: tidy time for Cache PM
+    """
     response = retrieve_parameter(**APP_PM_CACHE_TIDYTIME)
     return 0 if response is None else int(response)
 
 def get_redis_exptime() -> int:
+    """Get expiration time for Redis PM
+
+    Returns:
+        int: expiration time for Redis PM
+    """
     response = retrieve_parameter(**APP_PM_REDIS_EXPTIME)
     return 0 if response is None else int(response)

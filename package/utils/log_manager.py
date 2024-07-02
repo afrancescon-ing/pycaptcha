@@ -1,3 +1,6 @@
+""" Utility functions for logger configuration
+"""
+
 import logging
 import os
 from datetime import datetime
@@ -11,6 +14,8 @@ from package import LOG_LEVEL_DEFAULT,\
                     
 
 def configure_log():
+    """ Log configuration
+    """
 
     if not os.path.exists(LOG_LOGFOLDER_DEFAULT+'/'):
         os.makedirs(LOG_LOGFOLDER_DEFAULT+'/')

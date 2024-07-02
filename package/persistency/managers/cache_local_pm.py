@@ -1,3 +1,6 @@
+""" Persistance Manager implemented as Local Cache (dictionary)
+"""
+
 import logging
 from time import time
 from multiprocessing import Lock
@@ -8,8 +11,6 @@ from package.utils.params_manager import get_app_host, get_app_port
 
 CACHE_VALUE = 0
 CACHE_TIME = 1
-
-CACHE_TIDY_INTERVAL = 15
 
 logger = logging.getLogger(__name__)
 
@@ -31,17 +32,14 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
                     "\n\ttidy_time= %is",
                     self.expire_time_s,
                     self.tidy_time_s)
-        # self.scheduler = sched.scheduler(time, sleep)
-        # self.scheduler.enter(CACHE_TIDY_INTERVAL, 1, tidy_routine, (self,))
-        # self.scheduler.run()
 
     def push(self, uuid: str, value: str):
+        # synchronization: no parallel access to PM
         self._lock.acquire()
         try:
             if uuid in self._cache:
                 return False
             self._cache[uuid] = [value, time()]
-            # print("Insertion response %s/%s",uuid, value)
             logger.debug(
                 '[CACHE_PM] ADDED new captcha @%s:%i/%s/%s',
                 self.app_host,
@@ -53,10 +51,10 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             self._lock.release()
 
     def pop(self, uuid: str):
+        # synchronization: no parallel access to PM
         self._lock.acquire()
         try:
             response =  self._cache.pop(uuid)[CACHE_VALUE]
-            # print("DEleteion response %s",response)
             logger.debug(
                 '[CACHE_PM] DELETED captcha @%s:%i/%s/%s',
                 self.app_host,
@@ -70,6 +68,14 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             self._lock.release()
 
     def tidy(self):
+        """Remove all expired entries
+
+        Returns:
+            (list, list, list): 3-ple summarizing the tidy opearion
+                                list of kept uuids
+                                list of deleted uuids, 
+                                list of uuids with anomalies during deletion
+        """
         self._lock.acquire()
         try:
             now = time()
@@ -91,16 +97,27 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
             self._lock.release()
 
     def schedule_tidings(self):
-        # self.scheduler.enter(CACHE_TIDY_INTERVAL, 1, tidy_routine, (self,))
+        """Method scheduling the tidy routine
+        """
         t = Timer(self.tidy_time_s, self.tidy_routine, [])
         t.daemon = True
         t.start()
 
     def tidy_routine(self):
+        """Method scheduling next tidy_routine, performing tidy and logging 
+           response
+        """
         self.schedule_tidings()
         self.print_tidy_report(*self.tidy())
 
     def print_tidy_report(self, kept, expired, anomalies):
+        """_summary_
+
+        Args:
+            kept (list): kept uuids
+            expired (list): deleted uuids
+            anomalies (list): uuids with anomalies on deletion
+        """
         logger.debug('[CACHE_PM] Tidy report: '
                      'original %i, kept: %i '
                      '(expired&deleted: %i - deletion anomalies: %i)',
@@ -111,7 +128,3 @@ class LocalCachePersistenceManager(PersistenceManagerInterface):
 
     def my_type(self) -> str:
         return PM_CACHE_TYPE
-
-# def tidy_routine(cache_pm: LocalCachePersistenceManager):
-#     cache_pm.schedule_tidings()
-#     logger.debug(cache_pm.tidy())

@@ -1,3 +1,6 @@
+""" Persistance Manager implemented as Redis
+"""
+
 import logging
 from typing import Optional
 import redis
@@ -39,14 +42,24 @@ class RedisPersistenceManager(PersistenceManagerInterface):
                     True if self._redis_connection else False)
 
     def _connect(self) -> None:
-        self._redis_connection = redis.Redis(self.host, self.port, decode_responses=self.decode_responses)
+        self._redis_connection = redis.Redis(
+            self.host, self.port, 
+            decode_responses=self.decode_responses)
 
     def push_original(self, uuid: str, value: str) -> bool:
-        
+        """Performing a push into Redis
+
+        Args:
+            uuid (str): captcha's uuid
+            value (str): captcha's associated text
+
+        Returns:
+            bool: if insertion was successful or not
+        """
         response= self._redis_connection.set(
             uuid, value, ex=self.expire_time_s,
             nx=REDIS_SET_ONLY_IF_NOT_EXISTENT)
-        
+
         if response:
             logger.debug(
                 '[REDIS_PM] ADDED new captcha @%s:%i/%s/%s',
@@ -58,9 +71,16 @@ class RedisPersistenceManager(PersistenceManagerInterface):
         return bool(response)
 
     def pop_original(self, uuid: str) -> Optional[str]:
-        
+        """Performing a pop on Redis
+
+        Args:
+            uuid (str): captcha's uuid
+
+        Returns:
+            Union (str | None): captcha's associated value (on success) or None
+        """
         response = self._redis_connection.getdel(uuid)
-        
+
         if response:
             logger.debug(
                 '[REDIS_PM] DELETED captcha @%s:%i/%s/%s',
