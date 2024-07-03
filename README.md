@@ -1,4 +1,6 @@
+# PyCaptcha
 
+A Python, captcha and docker exercise.
 
 ## Assignment
 
@@ -66,8 +68,8 @@ Note: empty `__init__.py` omitted
 docker/                         docker folder
     compose.yaml                pycaptcha+redis service descriptor for docker
     Dockerfile                  Dockerfile to generate a docker image for 
-                                pycaptcha
-log/                            log folder
+                                  pycaptcha
+log/                            log folder (created at runtime)
 package/                        source code for modules developed for the app
     __init__.py                 app constants
     persistency/                folder for persistency-related components
@@ -77,7 +79,7 @@ package/                        source code for modules developed fo
             pm_interface.py     interface for pms
             redis_pm.py         redis-based pm class
         prims.py                primitives associated with persistency managers
- component handling
+                                  component handling
     utils/                      folder for useful functions
         captcha.py              utility functions related to capcha management
         env_globals.py          utility functions related to env vars management
