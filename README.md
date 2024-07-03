@@ -24,7 +24,7 @@ You have two weeks starting from today to deliver your assignment. When you’re
 
 [C2] See [S1](#s1-endpoint-1-generate-requestfunction),[S2](#s2-endpoint-2-validate-requestfunction) and [S3](#s4-captcha) (and all other _SX_ subsections) in the [Solution](#solution-description) section
 
-[C3] See [S7](#s7-environmental-variables-management)
+[C3] See [S7](#s7-environmental-variables-management) and [S10](#s10-docker)
 
 [Sa] FastAPI used
 
