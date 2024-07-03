@@ -243,3 +243,46 @@ FastAPi can be tested by leveraging `httpx` and `pytest`.
 File `test_pycaptcha.py` is an example of the test file.  
 `init_environment` is also helpful here since it allows modifying the env vars on the fly and retriggering the initialization of the global variables, thus enabling the setup of specific testing scenarios.  
 The only recommendation while using such a function is to avoid referring to any operation/event that happened before invoking it, since the persistency manager those operations relied on is no longer the one now referenced by the global variable `persistence_manager`.
+
+#### S10. DOCKER
+Since the app is meant to run in a docker container, a `Dockerfile` for generating a Docker image with the last version of the app and the proper environment to run it is provided in folder `docker/`.  
+The image exposes port `8000`, to be mapped to a host port, thus the app endpoints can be accessed locally.
+A pycaptcha Docker image generated with that doker file can be retrived from DockerHub:
+```
+docker push afrancescon/pycaptcha:latest
+```
+
+For testing purposes, it can be configured to rely on a Redis instance by providing via environmental vars Redis host and port and and the PM to redis:
+```
+PYCAP_PM_CLASS = redis
+PYCAP_APP_REDIS_HOST = <redis_HOST_value>
+PYCAP_APP_REDIS_PORT = <redis_PORT_value>
+```
+A Redis Docker image can be retrieved running
+```
+docker pull redis
+```
+
+To test it,
+1. Run a container with `redis` image
+
+2. Run a container with `pycaptcha` image (configuring env vars according to redis container setting).
+It is worth also adding at least these two extra env vars (which basically allow to know in advance the text used for genertaing the captcha - 'AA', in this case)
+```
+PYCAP_TEXTGEN_ALLOWED_CHARS = A
+PYCAP_TEXTGEN_LENGTH = 2
+```  
+
+3. Assuming `pycaptcha`'s exposed port `8000` is mapped to host port `8888`, perform a  
+`GET` request on host @`127.0.0.1:8888/`  
+It will return a captcha ass a png image, with the uuid saved in the header of the response (key=`captcha_uuid`).  
+Alternatively, that `uuid` value can be retrieved from pycaptcha's log, since every time a new captcha is created, a new line like the following is added to log:  
+`[<LOG_TIME_MODULE_INFO>] {[<PM_TYPE>] ADDED new captcha @<app_host>:<app_port>/<uuid>/<text>}`  
+
+4. Perform a  
+`GET` request on host @`127.0.0.1:8888/<uuid>/<text>`  
+The JSON response with have `validation` key set to `true`
+
+5. Repeat the same request, the JSON response with have `validation` key set to `false` (the couple `(uuid,text)` is `consumed` now)
+
+6. Keep playing around with it, creating new captchas, checking them and using wrong uuids or texts to see how the app reacts
