@@ -166,8 +166,8 @@ Policy 4. prevents the PM from being saturated by not-validated couples.  
 Policy 5. prevents simultaneous access to the resource for validation, trying to validate it by flooding it with concurrent requests. The synchronized approach is implemented using `threading.Lock'- based checks on PM operations.
 
 ##### S6.1) Local Cache PM
-This PM class is an in-memory implementation of PM based on a dictionary.  
-Activation and consumption of the key are trivial, respectively, based on insertion and deletion.  
+This PM class is an in-memory implementation of PM based on a dictionary.  
+Activation and consumption of the key are trivial, respectively, based on insertion and deletion.  
 Since implementing a strict expiration mechanism is somewhat resource-consuming (it implies one or more threads in the background performing the deletion operation with a timer specific for each couple, leading to a potentially impacting resource consumption and overmanagement), the proposed implementation relies on a `loose expiration approach`, where the activation generates and stores a `3-ple (key, value, activation_time)` and then a `tidy routine` is assumed to be triggered periodically (every `TIDY_TIME` seconds) checking all active entries and deleting those expired. Thus, after `EXPIRATION_TIME+TIDY_TIME` seconds passed since its creation, it is sure that that PM entry is no more.
 
 ##### S6.2) Redis PM
