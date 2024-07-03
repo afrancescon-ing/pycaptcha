@@ -6,6 +6,7 @@ import package.utils.env_globals as EGLOB
 from package import CAPTCHA_UUID_KEY
 from package.utils.captcha import generate_captcha
 from package.utils.log_manager import configure_log
+from package.utils.params_manager import get_app_host, get_app_port
 from package.utils.textgen import generate_random_captcha_text
 
 configure_log()
@@ -95,6 +96,6 @@ async def validate(captcha_uuid: str, captcha_text: str) -> JSONResponse:
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=get_app_host(), port=get_app_port())
     while True:
         pass

@@ -3,7 +3,7 @@
 
 import os
 from enum import Enum
-from typing import Union, Optional, Dict
+from typing import Union, Dict
 from package import \
     APP_HOST_KEY,\
     APP_HOST_ENV,\
@@ -210,7 +210,7 @@ def retrieve_parameter(
     Returns:
         Union ( str | int| float| bool| None): parameter value
     """
-    print(param_key, param_env_name, default, params_dict)
+    # print(param_key, param_env_name, default, params_dict)
     if params_dict and param_key in params_dict:
         return typize(params_dict[param_key], param_type)
 
@@ -250,21 +250,21 @@ def get_pm_class() -> str:
         raise TypeError("Persistence Manager class shall be a string (not None)")
     return str(response)
 
-def get_app_host() -> Optional[str]:
+def get_app_host() -> str:
     """Get app host value
     Returns:
-        Union (str | None): app host value
+        Union (str): app host value
     """
     response = retrieve_parameter(**APP_HOST)
-    return None if response is None else str(response)
+    return APP_HOST_DEFAULT if response is None else str(response)
 
-def get_app_port() -> Optional[int]:
+def get_app_port() -> int:
     """Get app port value
     Returns:
-        Union (int | None): app port value
+        Union (int): app port value
     """
     response = retrieve_parameter(**APP_PORT)
-    return None if response is None else int(response)
+    return APP_PORT_DEFAULT if response is None else int(response)
 
 def get_pm_params(pm_class: str) -> dict:
     """Get parameter dictionary for pm class

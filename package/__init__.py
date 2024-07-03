@@ -18,7 +18,7 @@ from datetime import timezone
 
 APP_HOST_KEY = 'app_host'
 APP_HOST_ENV = 'PYCAP_APP_HOST'
-APP_HOST_DEFAULT = '127.0.0.1'
+APP_HOST_DEFAULT = '0.0.0.0'
 
 APP_PORT_KEY = 'app_port'
 APP_PORT_ENV = 'PYCAP_APP_PORT'
