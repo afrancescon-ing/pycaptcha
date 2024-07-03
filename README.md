@@ -93,7 +93,7 @@ test_pycaptcha.py               test file example
 According to the assignment, the solution consists of defining two endpoints and other modules that provide functionalities that support endpoints' proper functioning. The app endpoints are exposed on a given port `port` of a given host `hostname`
 
 #### S1. ENDPOINT 1: **GENERATE** request/function
-The 'generate' function, the first part of our solution, is responsible for creating a new captcha.  
+The 'generate' function, the first part of our solution, is responsible for creating a new captcha.  
 A GET request at the plain URL:  
 _http://`hostname`:`port`_  
 triggers this function, which generates a random string and creates a unique identifier `uuid` for it.  
@@ -104,8 +104,8 @@ _**NOTE:**_
 To avoid having couples stored in the Persistence Manager for an indeterminate amount of time, it is worth assigning an expiration_time to each added couple: when the timer expires, the couple is deleted from the Persistence Manager. Thus, even if a couple is never checked again, it will be removed after a finite time.
 
 #### S2. ENDPOINT 2: **VALIDATE** request/function
-The "validate" function is responsible for validating users' captcha interpretation.
-It triggers on the arrival of a GET request at this endpoint URL:
+The "validate" function is responsible for validating users' captcha interpretation.  
+It triggers on the arrival of a GET request at this endpoint URL:  
 _http://`hostname`:`port`/`uuid`/`captcha_guess`_  
 where `uuid` is the identifier associated with the previously generated captcha (stored in the header of the received response on generation), while `captcha_guess` is the value users guessed for the captcha.  
 The function retrieves from the Persistence Manager the value associated with the passed uuid and then checks if the user's guessed value is the same as the stored value (`True` if they are equal, `False` otherwise). The check response is added to the body of the response message, which is a JSON file structured as follows:  
