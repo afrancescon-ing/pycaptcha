@@ -1,0 +1,35 @@
+
+services:
+  redis:
+    container_name: pycap_redis
+    image: redis:latest
+    restart: always
+    ports:
+     - "6379:6379"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.2
+
+  pycaptcha:
+    container_name: pycaptcha
+    image: afrancescon/pycaptcha:latest
+    restart: always
+    environment:
+      - PYCAP_PM_CLASS=redis
+      - PYCAP_APP_REDIS_HOST=10.5.0.2
+      - PYCAP_APP_REDIS_PORT=6379
+      - PYCAP_TEXTGEN_ALLOWED_CHARS=A
+      - PYCAP_TEXTGEN_LENGTH=2
+    ports:
+     - "8888:8000"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.3
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/28
+         gateway: 10.5.0.1

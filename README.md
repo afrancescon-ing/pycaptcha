@@ -63,6 +63,10 @@ API shall be now accessible at `127.0.0.1:8000`
 
 Note: empty `__init__.py` omitted
 ```
+docker/                         docker folder
+    compose.yaml                pycaptcha+redis service descriptor for docker
+    Dockerfile                  Dockerfile to generate a docker image for 
+                                pycaptcha
 log/                            log folder
 package/                        source code for modules developed for the app
     __init__.py                 app constants
@@ -249,7 +253,7 @@ Since the app is meant to run in a docker container, a `Dockerfile` for generati
 The image exposes port `8000`, to be mapped to a host port, thus the app endpoints can be accessed locally.
 A pycaptcha Docker image generated with that doker file can be retrived from DockerHub:
 ```
-docker push afrancescon/pycaptcha:latest
+docker pull afrancescon/pycaptcha:latest
 ```
 
 For testing purposes, it can be configured to rely on a Redis instance by providing via environmental vars Redis host and port and and the PM to redis:
@@ -286,3 +290,8 @@ The JSON response with have `validation` key set to `true`
 5. Repeat the same request, the JSON response with have `validation` key set to `false` (the couple `(uuid,text)` is `consumed` now)
 
 6. Keep playing around with it, creating new captchas, checking them and using wrong uuids or texts to see how the app reacts
+
+_**NOTE:**_ This whole scenario can be recreated entering `docker` folder and using the `compose.yaml` file by running
+```
+docker compose up
+```
