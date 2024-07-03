@@ -17,9 +17,7 @@ Some suggestions:
 * [Sa] use either Fastify for node.js, or FastAPI for python;
 * [Sb] automated unit tests for the project are a plus;
 * [Sc] typing your code (typescript or typed python checked with mypy) is considered a plus;
-* [Sd] using an external database for persistency is a plus, but even an in memory solution is ok;
-
-You have two weeks starting from today to deliver your assignment. When you’re done, please reply to this email with a working link to the project repository.
+* [Sd] using an external database for persistency is a plus, but even an in memory solution is ok.
 
 ## About constraints and suggestions
 [C1] This file, which has plenty of information about solution design and testing.
