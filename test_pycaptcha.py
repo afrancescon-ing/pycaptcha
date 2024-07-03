@@ -24,30 +24,92 @@ MULTIPLE_INSERTIONS = 100
 
 # Utility functions
 
-def assert_generate_response(response: Response):
-    assert response.status_code == 200
-    assert CAPTCHA_UUID_KEY in response.headers
-
-def assert_validate_response(response: Response, expected_value: bool =True):
-    assert response.status_code == 200
-    assert response.json() == {"validation": expected_value}
-
-def get_uuid_key_from_headers(response: Response):
-    assert CAPTCHA_UUID_KEY in response.headers
-    return response.headers[CAPTCHA_UUID_KEY]
-
 def generate_req(client: TestClient) -> Response:
+    """Performs a GENERATE request
+
+    Args:
+        client (TestClient): client sending the request
+
+    Returns:
+        Response: response to the GENERATE request
+    """
     return client.get("/")
 
+def assert_generate_response(response: Response):
+    """Checks the response to a GENERATE request
+
+    Args:
+        response (Response): response to be checked
+    """
+    assert response.status_code == 200
+    assert CAPTCHA_UUID_KEY in response.headers
+    
 def generate_req_and_assert(client: TestClient) -> Response:
+    """Performs a GENERATE request and checks the response
+
+    Args:
+        client (TestClient): client managing the request
+
+    Returns:
+        Response: response to the GENERATE request
+    """
     response = generate_req(client)
     assert_generate_response(response)
     return response
 
+def get_uuid_key_from_headers(response: Response) -> str:
+    """Retrieves the uuid value from the header of the 
+       response to a GENERATE request
+
+    Args:
+        response (Response): response to be parsed
+
+    Returns:
+        str: uuid associated to the generated captcha
+    """
+    assert CAPTCHA_UUID_KEY in response.headers
+    return response.headers[CAPTCHA_UUID_KEY]
+
 def validate_req(client: TestClient, uuid: str, value: str) -> Response:
+    """Performs a VALIDATE request
+
+    Args:
+        client (TestClient): client managing the request
+        uuid (str): uuid of the validting captcha
+        value (str): guessed text for the validating captcha
+
+    Returns:
+        Response: response to the VALIDATE request
+    """
     return client.get(f"/{uuid}/{value}")
 
-def validate_req_and_assert(client: TestClient, uuid: str, value: str, expected_value: bool =True) -> Response:
+def assert_validate_response(response: Response, expected_value: bool =True):
+    """Checks the response to a VALIDATE request
+
+    Args:
+        response (Response): response to be checked
+        expected_value (bool, optional): Validation entry value. 
+                                         Defaults to True.
+    """
+    assert response.status_code == 200
+    assert response.json() == {"validation": expected_value}
+
+
+def validate_req_and_assert(client: TestClient, uuid: str, value: str, 
+                            expected_value: bool =True) -> Response:
+    """Performs a VALIDATE request and checks the response
+
+
+    Args:
+        client (TestClient): _client managing the request
+        uuid (str): uuid of the validting captcha
+        value (str): guessed text for the validating captcha
+        expected_value (bool, optional): Validation entry value. 
+                                         Defaults to True.
+
+    Returns:
+        Response: response to the VALIDATE request
+    """
     response = client.get(f"/{uuid}/{value}")
     assert_validate_response(response, expected_value)
     return response
@@ -55,8 +117,9 @@ def validate_req_and_assert(client: TestClient, uuid: str, value: str, expected_
 # Tests
 
 def test_generate_random_captcha_text():
-
-    # client = TestClient(app)
+    
+    """Test text-generation with different charsets and lengths
+    """
 
     env_vars = {}
     env_vars[TEXTGEN_LENGTH_ENV] = "2"
@@ -108,7 +171,7 @@ def test_generate_random_captcha_text():
         EGLOB.get_textgen_allowed_chars())
 
     assert text == ''
-    
+
     env_vars[TEXTGEN_LENGTH_ENV] = "-1"
     env_vars[TEXTGEN_ALLOWED_CHARS_ENV] = 'c'
     EGLOB.init_environment(env_vars)
@@ -120,6 +183,9 @@ def test_generate_random_captcha_text():
     assert text == ''
 
 def test_gen_and_validate_cache_pm():
+
+    """Test captcha gen&valid request with Local Cache PM
+    """
 
     client = TestClient(app)
 
@@ -146,7 +212,10 @@ def test_gen_and_validate_cache_pm():
     # since the previous one forced deletion of the key
     response = validate_req_and_assert(client, uuid, right_guess, False)
 
-def test_N_gen_and_validate_cache_pm():
+def test_n_gen_and_validate_cache_pm():
+
+    """Test captcha batch gen&valid requests with Local Cache PM
+    """
 
     client = TestClient(app)
 
@@ -179,6 +248,9 @@ def test_N_gen_and_validate_cache_pm():
         response = validate_req_and_assert(client, uuid, right_guess)
 
 def test_tidy_routine_cache_pm():
+
+    """Test Local Cache PM tidy routine
+    """
 
     client = TestClient(app)
 
@@ -220,6 +292,9 @@ def test_tidy_routine_cache_pm():
 
 def test_gen_and_validate_redis_pm():
 
+    """Test captcha gen&valid request with Redis PM
+    """
+
     client = TestClient(app)
 
     env_vars = {}
@@ -246,7 +321,10 @@ def test_gen_and_validate_redis_pm():
     # since the previous one forced deletion of the key
     response = validate_req_and_assert(client, uuid, right_guess, False)
 
-def test_N_gen_and_validate_redis_pm():
+def test_n_gen_and_validate_redis_pm():
+
+    """Test captcha batch gen&valid requests with Redis PM
+    """
 
     client = TestClient(app)
 
@@ -279,6 +357,9 @@ def test_N_gen_and_validate_redis_pm():
         response = validate_req_and_assert(client, uuid, right_guess)
 
 def test_key_expiration_redis_pm():
+
+    """Test key expiratoin time with Redis PM
+    """
 
     client = TestClient(app)
 
