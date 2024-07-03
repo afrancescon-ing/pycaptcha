@@ -295,3 +295,8 @@ _**NOTE:**_ This whole scenario can be recreated entering `docker` folder and us
 ```
 docker compose up
 ```
+Then, open a browser and play with  
+`GENERATE` --> `http://127.0.0.1:8888`  
+and  
+`VALIDATE` --> `http://127.0.0.1:8888/<uuid>/<text>`  
+requests.
